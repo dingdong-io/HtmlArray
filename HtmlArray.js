@@ -45,6 +45,7 @@ $$(function () {
             }
           }
         };
+
 //地址转换,接受字符串参数,返回值{dir:'xx',type:'xx'}
 var pathChange = function (path) {
     var toPath = {}
@@ -69,7 +70,6 @@ var pathChange = function (path) {
     }
 
     toPath.url = dir
-    console.log(toPath)
     return toPath
 }
 
@@ -138,17 +138,19 @@ var pathChange = function (path) {
                       .append('<div class="' + childTemp + '">')
                     childTemp = $$('.' + childTemp)
 
-                    //资源的路径重写 对DOM属性操作
-                    if (/.*\//.test(oP.url)) { //当子页面与组合页位于不同目录
+                    //源文件路径(不含文件名)
+                    if (/.*\//.test(oP.url)) { //当子页面与组合页位于不同目录,包括绝对定位 和相对定位中出现'/'
                       oP.path = oP.url.replace(/(.*\/)(.*)\..*/, '$1')
                     } else { //当子页面与组合页位于同一目录
                       oP.path = ''
                     }
 
-                    //按源文件路径加入标题字段,不一定需要
-                    if (HtmlArray.config.eachTitle || defaultConfig.eachTitle) {
+defaultConfig.deleteTemp = HtmlArray.config.deleteTemp || defaultConfig.deleteTemp
+
+                    //按源文件路径加入标题字段
+                    if (HtmlArray.config.eachTitle || defaultConfig.eachTitle && !defaultConfig.deleteTemp) {
                       oP.title = RegExp.$2
-                      wrapTemp.before('<h1 class="pgTitle">' + oP.title + '<a target="_blank" href="' + oP.url + '">' + oP.url + '</a><input type="button" value="隐藏" /><span>删除该节点</span></h1>')
+                      wrapTemp.before('<h1 class="pgTitle">' + oP.title + '<a target="_blank" href="' + oP.url + '">' + oP.url + '</a><input type="button" value="隐藏" /><span title="删除后,恢复请刷新页面">删除该节点</span></h1>')
                       var wrapTempControl = wrapTemp.prev('h1')
                       wrapTempControl.on('click', 'input', function () {
                         if (wrapTemp.css('display') == 'none') {
@@ -200,7 +202,7 @@ var pathChange = function (path) {
                     }
 
                     //删除临时节点
-                    if (HtmlArray.config.deleteTemp || defaultConfig.deleteTemp) {
+                    if (defaultConfig.deleteTemp) {
                       wrapTempControl.remove()
                           childTemp.unwrap().remove()
                     } else {
@@ -212,10 +214,11 @@ var pathChange = function (path) {
 
                 }) //ajax结束
 
-            } //if(oP.url==='')的else结束
+            } //if(null == oP.type)的else结束
 
           } //多个子页面间的if循环结束
-          else { //iPageNum>=HtmlArray.length,即页面循环结束
+          //else 为iPageNum>=HtmlArray.length,即页面循环结束
+          else {
             exportError()
           }
 
@@ -230,7 +233,6 @@ var pathChange = function (path) {
           if (errors.hasError) {
             $$(".pgErrorInfo").css("display", "block")
             $$(".pgErrorBg").css("display", "block")
-//            $$(".pgErrorInfoPath").css("display", "block")
           }
 
           $$(".pgErrorBg").click(function () {
@@ -238,8 +240,7 @@ var pathChange = function (path) {
             $$(".pgErrorBg").css("display", "none")
           })
           $$(".pgErrorInfoClose").click(function () {
-            $$(".pgErrorInfo").css("display", "none")
-            $$(".pgErrorBg").css("display", "none")
+            $$(".pgErrorBg").trigger('click')
           })
         }, 3000)
       }
