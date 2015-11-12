@@ -49,9 +49,10 @@ $$(function () {
 var pathChange = function (path) {
     var toPath = {}
         //兼容采用双反斜杠的路径 去掉行首空格(好根据行首进行路径类型判断)
+    if(undefined == path) path = ''//防止双逗号错误
     var dir = path.replace(/\\/g, '/').replace(/^[ 　]*/, '')
 
-    //防止空路径,尤其是用户设置空路径会引起中断
+    //防止空路径(''和双逗号),尤其是用户设置空路径会引起中断
     if (dir === '') toPath.type = null
         //绝对路径,不转换 两种情况:首位'/',或带协议头(必带':/',包括ie直接返的盘符d:/)
     else if (/^\//.test(dir) || /file:\//.test(dir)) toPath.type = 'absolute'
@@ -67,7 +68,7 @@ var pathChange = function (path) {
 
     }
 
-    toPath.dir = dir
+    toPath.url = dir
     console.log(toPath)
     return toPath
 }
@@ -86,23 +87,24 @@ var pathChange = function (path) {
           }
 
           if (iPageNum < HtmlArray.length) {
-            var oP = {}; //处理第n个子页面,同时也是循环中的当前子页面
-            oP.url = HtmlArray[iPageNum]
-              //防止路径参数设置为''引起的中断
-            if (oP.url === '') {
+            //处理第n个子页面,同时也是循环中的当前子页面
+            var oP = pathChange(HtmlArray[iPageNum]);
+
+            //防止空路径参数设置为''引起的中断 及跨域型绝对路径
+            if ((null == oP.type) || ('absolute-http' == oP.type)) {
               errors.pageError()
               mainEnd()
-            } else {
-
-              //允许路径采用双反斜杠 '..\\footer\\footer5\\底部.html'
-              oP.url = oP.url.replace(/\\/g, '\/')
+            }
+            //非空路径,执行ajax
+            else {
 
               //添加临时包裹节点页面中
-              //              var wrapTemp = oP.url.replace(/[\/\.]+/mg,'-')
+              //var wrapTemp = oP.url.replace(/[\/\.]+/mg,'-')//以路径命名类
               var wrapTemp = "pgWrapTemp" + iPageNum
               var childTemp = "pgChildTemp" + iPageNum
               $$("body").append('<div class="' + wrapTemp + '">')
-              wrapTemp = '.' + wrapTemp
+              wrapTemp = $$('.' + wrapTemp)
+
 
               $$.ajax({
                   url: oP.url,
@@ -129,11 +131,12 @@ var pathChange = function (path) {
                       .replace(/<\/?body.*?>|<script[\s\S]*?<\/script>/img, '') //去掉了body属性/去除脚本
                       .replace(/([\r\n]\s*)+/mg, '\n')
 
-                    $$(wrapTemp)
+                    wrapTemp
                       .append(oP.head)
                       .append(oP.title)
                       .append(oP.body)
                       .append('<div class="' + childTemp + '">')
+                    childTemp = $$('.' + childTemp)
 
                     //资源的路径重写 对DOM属性操作
                     if (/.*\//.test(oP.url)) { //当子页面与组合页位于不同目录
@@ -145,25 +148,25 @@ var pathChange = function (path) {
                     //按源文件路径加入标题字段,不一定需要
                     if (HtmlArray.config.eachTitle || defaultConfig.eachTitle) {
                       oP.title = RegExp.$2
-                      $$(wrapTemp).before('<h1 class="pgTitle">' + oP.title + '<a target="_blank" href="' + oP.url + '">' + oP.url + '</a><input type="button" value="隐藏" /><span>删除该节点</span></h1>')
-                      var wrapTempControl = $$(wrapTemp).prev('h1')
+                      wrapTemp.before('<h1 class="pgTitle">' + oP.title + '<a target="_blank" href="' + oP.url + '">' + oP.url + '</a><input type="button" value="隐藏" /><span>删除该节点</span></h1>')
+                      var wrapTempControl = wrapTemp.prev('h1')
                       wrapTempControl.on('click', 'input', function () {
-                        if ($$(wrapTemp).css('display') == 'none') {
-                          $$(wrapTemp).show()
+                        if (wrapTemp.css('display') == 'none') {
+                          wrapTemp.show()
                           $$(this).val('隐藏')
                         } else {
-                          $$(wrapTemp).hide();
+                          wrapTemp.hide();
                           $$(this).val('显示')
                         }
                       })
                       wrapTempControl.on('click', 'span', function () {
-                        $$(wrapTemp).remove();
+                        wrapTemp.remove();
                         $$(this).html("已删除")
                         wrapTempControl.find('input').remove();
                       })
                     }
 
-                    $$(wrapTemp).find('*').each(function (i) {
+                    wrapTemp.find('*').each(function (i) {
                       if ($$(this).attr('href')) { //存在href属性
                         if ((/:\/\//m.test($$(this).attr('href'))) || ($$(this).attr('href').substring(0, 1) === '/') || ($$(this).attr('href').substring(0, 1) === '\\') || (/^[#\s]*$/.test($$(this).attr('href')))) { //资源绝对路径 或 a链接#
 
@@ -188,10 +191,10 @@ var pathChange = function (path) {
                       var tempjs = oP.js[i]
                       if (pa.test(tempjs)) { //有路径
                         tempjs = tempjs.replace(/src=[\'\"](.*?)[\'\"]/i, "src=" + oP.path + "$1")
-                        $$(wrapTemp).append($$(tempjs))
+                        wrapTemp.append($$(tempjs))
                       } else { //行间js脚本
                         setTimeout(function () {
-                          $$(wrapTemp).append($$(tempjs))
+                          wrapTemp.append($$(tempjs))
                         }, 500)
                       }
                     }
@@ -199,9 +202,9 @@ var pathChange = function (path) {
                     //删除临时节点
                     if (HtmlArray.config.deleteTemp || defaultConfig.deleteTemp) {
                       wrapTempControl.remove()
-                          $$('.' + childTemp).unwrap().remove()
+                          childTemp.unwrap().remove()
                     } else {
-                      $$('.' + childTemp).remove()
+                      childTemp.remove()
                     }
 
                     mainEnd() //单页面加载结束,也是if中调用主函数的循环
@@ -227,7 +230,7 @@ var pathChange = function (path) {
           if (errors.hasError) {
             $$(".pgErrorInfo").css("display", "block")
             $$(".pgErrorBg").css("display", "block")
-            $$(".pgErrorInfoPath").css("display", "block")
+//            $$(".pgErrorInfoPath").css("display", "block")
           }
 
           $$(".pgErrorBg").click(function () {
