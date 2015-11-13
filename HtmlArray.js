@@ -32,9 +32,9 @@ $$(function () {
       var iPageNum = 0, //第n个页面
         init = {
           //组合页面的标题
-          title: 'HtmlArray',
-          deleteTemp: false, //删除临时节点
-          eachTitle: false, //每个页面显示标题
+          title: HtmlArray.config.title || 'HtmlArray',
+          deleteTemp: HtmlArray.config.deleteTemp || false, //删除临时节点
+          eachTitle: HtmlArray.config.eachTitle || false, //每个页面显示标题
           src: ['src', 'href'], //自定义的资源路径属性
         },
         errors = {
@@ -50,7 +50,23 @@ $$(function () {
             }
           }
         };
+
+      //源文件中的资源 前缀字符集,如href
       Array.prototype.push.apply(init.src, HtmlArray.config.src)
+
+                    var sSrcTitle = '',
+                      iSrcCount = 0;
+                    for (var srcI = init.src.length - 1; srcI >= 0; srcI--) {
+                      if (!iSrcCount) {
+                        iSrcCount = 1
+                        sSrcTitle += init.src[srcI]
+                      } else sSrcTitle += '|' + init.src[srcI]
+                    }
+                    var srcReg = new RegExp('(' + sSrcTitle + ')\\s*=\\s*[\'\"]((?!#|\/|(.*?:\/)).*)[\'\"]','ig')
+
+
+      //页面标题
+      $$("head").prepend("<title>" + (init.title))
 
       //地址转换,接受字符串参数,返回值{dir:'xx',type:'xx'}
       var pathChange = function (path) {
@@ -83,8 +99,7 @@ $$(function () {
 
 
 
-      //页面标题
-      $$("head").prepend("<title>" + (HtmlArray.config.title || init.title))
+
 
       //主循环函数,不采用for是避免异步造成的变量混乱
       var main = function () {
@@ -134,17 +149,8 @@ $$(function () {
                     }
 
 
-                    //源文件中的资源 前缀字符集,如href
-                    var sSrcTitle = '',
-                      iSrcCount = 0;
-                    for (var srcI = init.src.length - 1; srcI >= 0; srcI--) {
-                      if (!iSrcCount) {
-                        iSrcCount = 1
-                        sSrcTitle += init.src[srcI]
-                      } else sSrcTitle += '|' + init.src[srcI]
-                    }
+
                     //源文件中的资源 路径处理
-                    var srcReg = new RegExp('(' + sSrcTitle + ')\\s*=\\s*[\'\"]((?!#|\/|(.*?:\/)).*)[\'\"]','ig')
                     res = res.replace(srcReg,'$1="'+oP.path+'$2"')
 
 
@@ -172,10 +178,10 @@ $$(function () {
 
 
 
-                    init.deleteTemp = HtmlArray.config.deleteTemp || init.deleteTemp
+
 
                     //按源文件路径加入标题字段
-                    if (HtmlArray.config.eachTitle || init.eachTitle && !init.deleteTemp) {
+                    if (init.eachTitle && !init.deleteTemp) {
                       oP.title = RegExp.$2
                       wrapTemp.before('<h1 class="pgTitle">' + oP.title + '<a target="_blank" href="' + oP.url + '">' + oP.url + '</a><input type="button" value="隐藏" /><span title="删除后,恢复请刷新页面">删除该节点</span></h1>')
                       var wrapTempControl = wrapTemp.prev('h1')
