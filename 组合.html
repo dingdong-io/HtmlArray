@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+  <meta content="yes" name="apple-mobile-web-app-capable" />
+  <meta content="black" name="apple-mobile-web-app-status-bar-style" />
+  <script src="jquery-2.1.4.min.js"></script>
+
+  <script>
+    //模块集合的初始化,将需要的模块路径按数组的格式写入,如 ['url1','url2',...]
+    //接受绝对路径和相对路径 接受斜杠和双反斜杠
+    //由于禁止跨域,设置页面绝对路径时,文件需在同一个工作目录下,不支持类似于http://qq.com/xxx.html
+    HtmlArray = [
+"index.html",
+"/demo/index.html",
+//      ""
+//      'http:\/\/baidu.com'
+]
+
+    ;HtmlArray.config = {
+      title: 'HtmlArray示例-所有参数',
+      eachTitle:true,//每个页面显示标题
+      deleteTemp:true,//删除控制节点
+//      src:['mysrc','data-src'],//自定义的资源路径属性
+    };
+  </script>
+  <!--推荐将该脚本放于用户自定义之后-->
+  <script src="HtmlArray.js"></script>
+  <style rel="stylesheet" type="text/css">
+    a:focus{-webkit-user-modify:read-only;}/*pc界面a标签可以点击*/
+    h1.pgTitle{position:relative;z-index = 999999;font-size:.5rem;line-height: 1.5;text-align: center;}
+    h1.pgTitle>*{display:inline-block;font-size:.4rem;line-height: 1.5;margin:0 1em;}
+    .pgErrorInfo{display: none;position: fixed;width:100%;max-width: 640px;z-index: 99999;font-size: 0;height:100%;text-align: center;left: 0;right: 0;top: 0;bottom: 0;margin: auto;}
+    .pgErrorInfoPath{display: inline-block;width:65%;padding:1% 3% 1% 5%;margin:0 auto; vertical-align: middle;font-size: 1rem;background-color: #fff;}
+    .pgErrorInfo div p{width:100%;}
+    .pgErrorInfo::after{content:'';display: inline-block;vertical-align: middle;height: 100%;width: 0;}
+    .pgErrorInfo button{display:block;width:20%;margin:0 auto;padding:.2rem;}
+    .pgErrorBg{display: none;position: fixed;top:0;left:0;width: 100%;height:100%;background-color: #000;opacity: 0.3;z-index: 99990;}
+  </style>
+
+</head>
+
+<body>
+
+  <div class="pgErrorInfo">
+    <div class="pgErrorInfoPath">
+      <p>第<span></span>个路径有误,请检查.</p>
+      <p>如果是在本机测试(没有架设服务器),请参照 <a id="test" target='_blank' href='http://blog.sina.com.cn/s/blog_a76aa1590101eams.html'>这里</a></p>
+      <button class="pgErrorInfoClose">关闭</button>
+    </div>
+
+  </div>
+  <div class="pgErrorBg"></div>
+
+  <div id="pg">
+  <a href = "http://index' .html#">http</a>
+  <a href = "D:/ab1../a.h">d:/</a>
+  <a href='###'>###</a>
+  <a href='#' class="ca">#</a>
+  <a href='../cd1.txt'>../xx</a>
+  <a href='/cd1.txt'>/xx</a>
+
+
+  </div>
+
+</body>
+
+</html>

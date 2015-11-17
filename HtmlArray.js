@@ -113,30 +113,60 @@ $$(function () {
             //处理第n个子页面,同时也是循环中的当前子页面
             var oP = pathChange(HtmlArray[iPageNum]);
 
+            function wrap(){
+            //添加临时包裹节点页面中
+              //oP.wrapTemp = oP.url.replace(/[\/\.]+/mg,'-')//以路径命名类
+              oP.wrapTemp = "pgwrapTemp" + iPageNum
+              oP.childTemp = "pgchildTemp" + iPageNum
+              $$("body").append('<div class="' + oP.wrapTemp + '">')
+              oP.wrapTemp = $$('.' + oP.wrapTemp)
+              oP.wrapTemp.append('<div class="' + oP.childTemp + '">')
+                    oP.childTemp = $$('.' + oP.childTemp)
+
+                    //按源文件路径加入标题字段
+                    if (init.eachTitle) {
+                      ('/'+oP.url).match(/.*\/(.*)\..*/)
+                      oP.title = RegExp.$1
+                      oP.wrapTemp.before('<h1 class="pgTitle">' + oP.title + '<a target="_blank" href="' + oP.url + '">' + oP.url + '</a><input type="button" value="隐藏" /><span title="删除后,恢复请刷新页面">删除该节点</span></h1>')
+                      oP.wrapTempControl = oP.wrapTemp.prev('h1')
+                      oP.wrapTempControl.on('click', 'input', function () {
+                        if (oP.wrapTemp.css('display') == 'none') {
+                          oP.wrapTemp.show()
+                          $$(this).val('隐藏')
+                        } else {
+                          oP.wrapTemp.hide();
+                          $$(this).val('显示')
+                        }
+                      })
+                      oP.wrapTempControl.on('click', 'span', function () {
+                        oP.wrapTemp.remove();
+                        $$(this).html("已删除")
+                        oP.wrapTempControl.find('input').remove();
+                      })
+                    }
+              }
+
             //防止空路径参数设置为''引起的中断 及跨域型绝对路径
-            if ((null == oP.type) || ('absolute-http' == oP.type)) {
+            if ((null == oP.type) || ('absolute_http' == oP.type)) {
+              wrap()
+              oP.wrapTemp.html('路径')
               errors.pageError()
               mainEnd()
             }
             //非空路径,执行ajax
             else {
 
-              //添加临时包裹节点页面中
-              //var wrapTemp = oP.url.replace(/[\/\.]+/mg,'-')//以路径命名类
-              var wrapTemp = "pgWrapTemp" + iPageNum
-              var childTemp = "pgChildTemp" + iPageNum
-              $$("body").append('<div class="' + wrapTemp + '">')
-              wrapTemp = $$('.' + wrapTemp)
-
-
               $$.ajax({
                   url: oP.url,
                   type: "GET",
                   error: function () {
+                    wrap()
+                    oP.wrapTemp.html('ajax失败')
                     errors.pageError()
                     mainEnd()
                   },
                   success: function (res, stutas, xhr) {
+                    wrap()
                     //去公用
                     res = res
                       .replace(/<link.*?common\/css\/common\.css.*?>/ig, '') //去公用css
@@ -148,12 +178,8 @@ $$(function () {
                       oP.path = ''
                     }
 
-
-
                     //源文件中的资源 路径处理
                     res = res.replace(srcReg,'$1="'+oP.path+'$2"')
-
-
 
                     //res插入前处理
                     oP.head = res.match(/<head[\s\S]+<body/i).toString()
@@ -169,47 +195,9 @@ $$(function () {
                       .replace(/<\/?body.*?>|<script[\s\S]*?<\/script>/ig, '') //去掉了body属性/去除脚本
                       .replace(/([\r\n]\s*)+/mg, '\n')
 
-                    wrapTemp
+                    oP.wrapTemp
                       .append(oP.head)
-                      .append(oP.title)
                       .append(oP.body)
-                      .append('<div class="' + childTemp + '">')
-                    childTemp = $$('.' + childTemp)
-
-
-
-
-
-                    //按源文件路径加入标题字段
-                    if (init.eachTitle && !init.deleteTemp) {
-                      oP.title = RegExp.$2
-                      wrapTemp.before('<h1 class="pgTitle">' + oP.title + '<a target="_blank" href="' + oP.url + '">' + oP.url + '</a><input type="button" value="隐藏" /><span title="删除后,恢复请刷新页面">删除该节点</span></h1>')
-                      var wrapTempControl = wrapTemp.prev('h1')
-                      wrapTempControl.on('click', 'input', function () {
-                        if (wrapTemp.css('display') == 'none') {
-                          wrapTemp.show()
-                          $$(this).val('隐藏')
-                        } else {
-                          wrapTemp.hide();
-                          $$(this).val('显示')
-                        }
-                      })
-                      wrapTempControl.on('click', 'span', function () {
-                        wrapTemp.remove();
-                        $$(this).html("已删除")
-                        wrapTempControl.find('input').remove();
-                      })
-                    }
-
-
-
-                    //删除临时节点
-                    if (init.deleteTemp) {
-                      wrapTempControl.remove()
-                      childTemp.unwrap().remove()
-                    } else {
-                      childTemp.remove()
-                    }
 
                     mainEnd() //单页面加载结束,也是if中调用主函数的循环
                   }, //success结束
@@ -218,8 +206,18 @@ $$(function () {
 
             } //if(null == oP.type)的else结束
 
+
+
+                    //删除临时节点
+                    if (init.deleteTemp) {
+//                      oP.wrapTempControl.remove()
+//                      oP.childTemp.unwrap().remove()
+                    } else {
+                      oP.childTemp.remove()
+                    }
+
           } //多个子页面间的if循环结束
-          //else 为iPageNum>=HtmlArray.length,即页面循环结束
+          //下面else 为iPageNum>=HtmlArray.length,即页面循环结束
           else {
             exportError()
           }
