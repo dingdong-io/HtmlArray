@@ -26,12 +26,11 @@ $$(function () {
         var iPageNum = 0, //第n个页面
           init = {
             title: HtmlArray.config.title || 'HtmlArray',//组合页面的标题
-            deleteTemp: HtmlArray.config.deleteTemp, //删除临时节点
-            eachConsole: HtmlArray.config.eachConsole || false, //每个页面显示标题
+            deleteWrap: HtmlArray.config.deleteWrap, //删除临时节点
+            console: HtmlArray.config.console || false, //每个页面显示标题
             fixed: HtmlArray.config.fixed, //fixed定位
             src: ['src', 'href'], //自定义的资源路径属性
             disable: ['HtmlArray.js'], //禁用文件集
-            jsDelay: HtmlArray.config.jsDelay, //js文件延迟加载
             nullHref: HtmlArray.config.nullHref || '#' //改变href="#"路径
           },
           errors = {
@@ -52,13 +51,6 @@ $$(function () {
         //是否允许fixed,默认true
       if(undefined === init.fixed)
         init.fixed = true
-        //删除临时节点,默认true
-      if(undefined === init.deleteTemp)
-        init.deleteTemp = true
-        //js延迟加载,时间参数,只有用户设false时无效,默认为0(且是有效的)
-      if(undefined === init.jsDelay)
-        init.jsDelay = 0
-
 
         //集合用户参数和默认初始化
         var argsToArray = function (initarg, user) {
@@ -114,11 +106,9 @@ $$(function () {
               iPageNum++
 
               //删除临时节点
-              if (init.deleteTemp) {
-                $(oP.wrapTemp).each(function(){
-                  var temp = $$(this).html()
-                  $$(this).replaceWith(temp)
-                })
+              if (init.deleteWrap) {
+                  var temp = $$(oP.wrapTemp).html()
+                  $$(oP.wrapTemp).replaceWith(temp)
               }
 
 
@@ -138,7 +128,7 @@ $$(function () {
                 oP.wrapTemp = $$('.' + oP.wrapTemp)
 
                 //按源文件路径加入标题字段
-                if (init.eachConsole) {
+                if (init.console) {
                   ('/' + oP.url).match(/.*\/(.*)\..*/)
                   oP.title = RegExp.$1
                   oP.wrapTemp.before('<h1 class="pgTitle">' + oP.title + '<a target="_blank" href="' + oP.url + '">' + oP.url + '</a><input type="button" value="隐藏" /><span title="删除后,恢复请刷新页面">删除该节点</span></h1>')
@@ -197,27 +187,14 @@ $$(function () {
                       //res处理, meta标签暂不删
                       res = res.replace(/(<\/?!doctype.*?>)|(<\/?html>)|(<\/?head>)|(<\/?body.*?>)|(<title.*?<\/title>)/ig, '').replace(/([\r\n]\s*)+/g, '\n')
 
-                      //js文件延迟加载
-                      //=0的判断,允许0秒,只有false无效
-                      if (init.jsDelay || 0 === init.jsDelay) {
-                        init.jsDelay = init.jsDelay+10
-                        oP.js = null
-                        //去注释,否则注释中的脚本也会被加载
-                        res = res.replace(/<\!--[\s\S]*?-->/g,'')
-                        oP.js = res.match(/<script[\s\S]*?<\/script>/ig)
-                        res = res.replace(/<script[\s\S]*?<\/script>/ig, '')
-                        oP.wrapTemp.append(res)
-                        if (!!oP.js){
-                          oP.js = oP.js.join('\n')
-                        setTimeout(function () {
-                          oP.wrapTemp.append(oP.js)
-                        }, init.jsDelay)
-                        }
-                      }
-                      else{
-                        //res插入到组合页中
-                        oP.wrapTemp.append(res)
-                      }
+                      //script标签改名,目的:暂时不加载
+                      res = res.replace(/<script([\s\S]*?)<\/script>/ig,'<hascript'+'$1'+'</hascript>')
+
+                      //res插入到组合页中
+                      oP.css = res.match(/(<style[\s\S]*?<\/style>)|(<link.*?>)/ig).join(',')
+                      res = res.replace(/(<style[\s\S]*?<\/style>)|(<link.*?>)/ig,'')
+                      $$('head').append(oP.css)
+                      oP.wrapTemp.append(res)
 
                       mainEnd() //单页面加载结束,也是if中调用主函数的循环
                     }, //success结束
@@ -239,6 +216,14 @@ $$(function () {
         //错误输出
         function exportError() {
           setTimeout(function () {
+
+            //script还原
+            $$('body').wrapInner('<div id="habodytemp">')
+              var all = $$('#habodytemp').html()
+              all = all.replace(/<hascript([\s\S]*?)<\/hascript>/g,'<script'+'$1'+'</script>')
+              $('#habodytemp').replaceWith(all)
+
+
             if (errors.hasError) {
               $$(".pgErrorInfo").css("display", "block")
               $$(".pgErrorBg").css("display", "block")
@@ -275,7 +260,7 @@ $$(function () {
               })
             }
 
-          }, 3000)
+          }, 1000)
         }
 
       }, 300) //setTimeout //等待获取页面文件的参数
