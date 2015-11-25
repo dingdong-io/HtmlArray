@@ -188,30 +188,35 @@ $$(function () {
 
                       //源文件中的资源 路径处理
                       //禁用文件处理
-                      if (init.disable) {
                         for (var i = init.disable.length - 1; i >= 0; i--) {
                           res = res.replace(new RegExp('(' + init.src.join('|') + ')\\s*=\\s*[\'\"].*?' + init.disable[i] + '.*?[\'\"]', 'ig'), '')
                         }
-                      }
                       //非禁用文件的通用处理
                       res = res.replace(srcReg, '$1="' + oP.path + '$2"')
 
                       //res处理, meta标签暂不删
                       res = res.replace(/(<\/?!doctype.*?>)|(<\/?html>)|(<\/?head>)|(<\/?body.*?>)|(<title.*?<\/title>)/ig, '').replace(/([\r\n]\s*)+/g, '\n')
-                        //res插入到组合页中
-                      oP.wrapTemp.append(res)
 
                       //js文件延迟加载
-                      oP.js = null
-                        //=0的判断,允许0秒,只有false无效
+                      //=0的判断,允许0秒,只有false无效
                       if (init.jsDelay || 0 === init.jsDelay) {
-
-                        oP.js = res.match(/<script[\s\S]*?<\/script>/igm)
-                        res = res.replace(/<script[\s\S]*?<\/script>/igm, '')
-                        if (!!oP.js) oP.js = oP.js.join('\n')
+                        init.jsDelay = init.jsDelay+10
+                        oP.js = null
+                        //去注释,否则注释中的脚本也会被加载
+                        res = res.replace(/<\!--[\s\S]*?-->/g,'')
+                        oP.js = res.match(/<script[\s\S]*?<\/script>/ig)
+                        res = res.replace(/<script[\s\S]*?<\/script>/ig, '')
+                        oP.wrapTemp.append(res)
+                        if (!!oP.js){
+                          oP.js = oP.js.join('\n')
                         setTimeout(function () {
                           oP.wrapTemp.append(oP.js)
                         }, init.jsDelay)
+                        }
+                      }
+                      else{
+                        //res插入到组合页中
+                        oP.wrapTemp.append(res)
                       }
 
                       mainEnd() //单页面加载结束,也是if中调用主函数的循环
