@@ -36,14 +36,17 @@ $ = Zepto;
           errors = {
             hasError: false,
             pageCount: 0,
+            pageNums:'',
             pageError: function () { //路径错误
               errors.hasError = true;
               if (errors.pageCount === 0) {
-                $$(".pgErrorInfo").find("span").append(iPageNum + 1)
+                errors.pageNums += (iPageNum + 1)
                 errors.pageCount = 1
-              } else {
-                $$(".pgErrorInfo").find("span").append('/' + (iPageNum + 1))
               }
+              else {
+                errors.pageNums += '/' + (iPageNum + 1)
+              }
+              return errors.pageNums
             }
           };
       var jsArray = [];
@@ -74,6 +77,11 @@ $ = Zepto;
 
         //页面标题
         $$("head").prepend("<title>" + (init.title))
+
+        //
+       if(init.console){
+         $$('head').append('<style rel=\"stylesheet\" type=\"text/css\">/*分页控制样式*/h1.pgTitle{position:relative;z-index = 999999;font-size:.8rem;line-height: 1.5;text-align: center;} \n h1.pgTitle>*{display:inline-block;line-height: 1.5;margin:0 1em;word-break: break-all;}</style>')
+       }
 
         //地址转换,接受字符串参数,返回值{dir:'xx',type:'xx'}
         var pathChange = function (path) {
@@ -221,21 +229,20 @@ $ = Zepto;
             $$('body').append(jsArray)
 
             if (errors.hasError) {
+              //插入错误样式和内容
+              $$('head').append('<style rel=\"stylesheet\" type=\"text/css\">/*帮助报错的样式控制*/ \n .pgErrorInfo{display: none;position: fixed;width:100%;z-index: 99999;max-width:640px;left: 0;right: 0;margin:auto;background-color: #e6e6e6;padding-bottom:10px;} \n .pgErrorInfo>div{width:70%;margin:0 auto;} \n .pgErrorInfo div p{padding:3% 3% 0 5%;width:100%;} \n .pgErrorInfo button{display:block;width:20%;margin:0 auto;font-size: 1.3rem;padding:.2rem;} \n .pgErrorBg{display: none;position: fixed;top:0;left:0;width: 100%;height:100%;background-color: #000;opacity: 0.3;z-index: 99990;}</style>')
+              $$('body').prepend('<!--报错区--> \n <div class=\"pgErrorInfo\"> \n <div class=\"pgErrorInfoPath\"> \n <p>第<span>'+errors.pageNums+'</span>个路径有误,请检查.</p> \n <p>如果是在本机测试(没有架设服务器),请参照 <a target=\"_blank\" href=\"http://blog.sina.com.cn/s/blog_a76aa1590101eams.html\">这里</a></p> \n </div> \n <button class=\"pgErrorInfoClose\">关闭</button> \n </div> \n <div class=\"pgErrorBg\"></div>')
+
+
               $$(".pgErrorInfo").css("display", "block")
               $$(".pgErrorBg").css("display", "block")
             }
-            $$(".pgErrorInfo").click(function () {
-              $$(".pgErrorInfoClose").trigger('click')
-            })
             $$(".pgErrorBg").click(function () {
               $$(".pgErrorInfoClose").trigger('click')
             })
             $$(".pgErrorInfoClose").click(function () {
               $$(".pgErrorInfo").css("display", "none")
               $$(".pgErrorBg").css("display", "none")
-            })
-            $$(".pgErrorInfoPath").click(function (e) {
-              return false;
             })
 
             //href="#"改写为"###"
@@ -264,3 +271,7 @@ $ = Zepto;
 
 
   }) //$$(function(){})的结束
+
+
+/*h1.pgTitle{position:relative;z-index = 999999;font-size:.8rem;line-height: 1.5;text-align: center;}
+    h1.pgTitle>*{display:inline-block;line-height: 1.5;margin:0 1em;word-break: break-all;}*/
