@@ -26,8 +26,7 @@ $ = Zepto;
         var iPageNum = 0, //第n个页面
           init = {
             title: HtmlArray.config.title || 'HtmlArray',//组合页面的标题
-            deleteWrap: HtmlArray.config.deleteWrap, //删除临时节点
-            console: HtmlArray.config.console || false, //每个页面显示标题
+            debug: HtmlArray.config.debug || false, //调试模式，默认false，设为true时将删除分页的包裹节点
             fixed: HtmlArray.config.fixed, //fixed定位
             src: ['src', 'href'], //自定义的资源路径属性
             disable: ['HtmlArray.js'], //禁用文件集
@@ -79,7 +78,7 @@ $ = Zepto;
         $$("head").prepend("<title>" + (init.title))
 
         //
-       if(init.console){
+       if(init.debug){
          $$('head').append('<style rel=\"stylesheet\" type=\"text/css\">/*分页控制样式*/h1.pgTitle{position:relative;z-index = 999999;font-size:.8rem;line-height: 1.5;text-align: center;} \n h1.pgTitle>*{display:inline-block;line-height: 1.5;margin:0 1em;word-break: break-all;}</style>')
        }
 
@@ -115,7 +114,7 @@ $ = Zepto;
               iPageNum++
 
               //删除临时节点
-              if (init.deleteWrap) {
+              if (!init.debug) {
                   var temp = $$(oP.wrapTemp).html()
                   $$(oP.wrapTemp).replaceWith(temp)
               }
@@ -137,7 +136,7 @@ $ = Zepto;
                 oP.wrapTemp = $$('.' + oP.wrapTemp)
 
                 //按源文件路径加入标题字段
-                if (init.console) {
+                if (init.debug) {
                   ('/' + oP.url).match(/.*\/(.*)\..*/)
                   oP.title = RegExp.$1
                   oP.wrapTemp.before('<h1 class="pgTitle">' + oP.title + '<a target="_blank" href="' + oP.url + '">' + oP.url + '</a><input type="button" value="隐藏" /><span title="删除后,恢复请刷新页面">删除该节点</span></h1>')
