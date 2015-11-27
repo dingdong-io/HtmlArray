@@ -1,0 +1,11 @@
+{
+  "name":"htmlarray"
+  ,"author":"dingdong"
+  ,"version":"1.0.0"
+  ,"description":"Help front-end to group html pages by front-end way,帮助前端工程师用前端的方式方法来组合静态html页面"
+  ,"license":"MIT"
+  ,"repository":{
+    "type" : "git"
+    , "url" : "https://github.com/dingdong-io/HtmlArray.git"
+  }
+}
