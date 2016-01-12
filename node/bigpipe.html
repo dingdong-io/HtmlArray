@@ -1,0 +1,202 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>bigpipe</title>
+    <meta charset="utf8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta content="yes" name="apple-mobile-web-app-capable" />
+    <meta content="black" name="apple-mobile-web-app-status-bar-style" />
+    <link rel="stylesheet" href="/bigpipe/css/common.css">
+    <link rel="stylesheet" href="/bigpipe/css/style.css">
+    <style>
+        .ajax {
+            height: 500px;
+            width:100%;
+        }
+        .ajax1 {
+            height: 500px;
+            width:100%;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="bigpipe" id="header">
+        <!-- 此处数据bigpipe加载 -->
+    </div>
+
+
+
+    <div class="ajax ajax21">
+        <p data-href="/data/lists/lists.html"></p>
+    </div>
+    <div class="ajax ajax1">
+        <p data-href="/data/classification/class.html"></p>
+        <!-- 此处数据ajax加载 -->
+    </div>
+
+    <div class="ajax ajax22">
+        <p data-href="/data/lists/lists.html"></p>
+    </div>
+
+    <div class="ajax ajax3">
+        <p data-href="/data/hot/hot.html"></p>
+    </div>
+
+    <div class="ajax ajax23">
+        <p data-href="/data/lists/lists.html"></p>
+    </div>
+
+    <div class="ajax ajax3">
+        <p data-href="/data/instructions/instructions.html"></p>
+    </div>
+
+
+    <div class="ajax ajax24">
+        <p data-href="/data/lists/lists.html"></p>
+    </div>
+
+    <div class="ajax ajax4">
+        <p data-href="/data/copyright/copyright.html"></p>
+    </div>
+
+
+
+
+    <div class="bigpipe" id="footer">
+        <!-- 此处数据bigpipe加载 -->
+    </div>
+
+    <!--bigpipe-->
+    <script type="text/template" id="headerInfo">
+        <%= info%>
+    </script>
+    <script type="text/template" id="footerInfo">
+        <%= info%>
+    </script>
+
+    <script src="/lib/jquery/dist/jquery.min.js"></script>
+<!--    <script src="/bigpipe/js/zepto-1.16.min.js"></script>-->
+<!--    <script src="/bigpipe/js/default.js"></script>-->
+    <script src="/lib/underscore/underscore.js"></script>
+    <script src="/bigpipe/js/bigpipe.js"></script>
+
+    <script>
+        var c = console.log.bind(console)
+
+        var bigpipe = new Bigpipe();
+
+        /*bigpipe的数据需要写下面脚本,ajax不需要*/
+        bigpipe.ready('header', function(data) {
+            var template = _.template($('#headerInfo').html());
+            $('#header').html(template({
+                info: data
+            }));
+        });
+        bigpipe.ready('footer', function(data) {
+            //        c(data);
+            var template = _.template($('#footerInfo').html());
+            $('#footer').html(template({
+                info: data
+            }));
+        });
+
+
+
+        /*ajax相关,bigpipe不需要*/
+        $(document).on('myEvent', function() {
+            //nAdvance 定义预读取距离,即块离可见区还有多远时
+            var winHei = $(window).height(),
+                footHei = $('footer').height(),
+                oAjax = $('.ajax')
+
+
+            for (var i = oAjax.length - 1; i >= 0; i--) {
+                oAjax.eq(i).on('triAjax', {
+                    'index': i,
+                    'scrollTop':$(window).scrollTop()
+                }, function(e) {
+                    var location = $(this)[0].getBoundingClientRect(),
+                        i = e.data.index
+
+                    c('当前未加载的块:.'+$(this).attr('class')+'; top:'+location.top+', bottom:'+location.bottom)
+
+
+                    //显示区内的块 ,如果预设高大于屏高?
+                    if ((location.top>0 && location.top - winHei + footHei<0) || (location.bottom<winHei && location.bottom>0)){
+
+                        $.ajax({
+                            url: oAjax.eq(i).find('p').attr('data-href'),
+                            type: "GET",
+                            error: function() {
+                                c('ajax失败')
+                                    //!!解绑几秒
+                            },
+                            success: function(res, stutas, xhr) {
+                                //仅加载一次
+                                oAjax.eq(i).off('triAjax')
+                                //解除加载动画
+                                oAjax.eq(i).removeClass('ajax')
+
+                                c(oAjax.eq(i).attr('class')+' ajax成功')
+
+                                oAjax.eq(i).html(res)
+                                oAjax.eq(i).height('auto')
+
+                                //彻底解绑scroll,提高性能
+                                if($('.ajax').length == 0){
+                                   c('全局不再监听滚动')
+                                   $(window).off('scroll',listenScroll)
+                                }
+                            }
+                        })
+                    }
+                })
+            }
+
+
+
+             /*判断滚动停止*/
+            var topValue = 0, // 上次滚动条到顶部的距离
+                interval = null; // 定时器
+
+            var listenScroll = function(){
+                if (interval == null)
+                    interval = setInterval(scrollEnd, 300); //判定间隔时
+            }
+
+
+//            window.onscroll = function () {
+//
+//                if (interval == null)
+//                    interval = setInterval(test, 300); //判定间隔时间
+//            }
+
+            var scrollEnd = function() {
+                // 判断此刻到顶部的距离是否和之前的距离相等
+                if ($(window).scrollTop() == topValue) {
+                    c('屏高:'+$(window).height()+'; 当块的top或bottom在 0~屏高 之间时,触发加载,并不再绑定判断')
+                    oAjax.trigger('triAjax')
+                    //此处停止
+                    clearInterval(interval);
+                    interval = null;
+//
+                }
+                topValue = $(window).scrollTop();
+
+            }
+
+            $(window).on('scroll',listenScroll).trigger('scroll')
+
+        })
+
+       $(document).trigger("myEvent")
+
+    </script>
+
+
+</body>
+
+</html>

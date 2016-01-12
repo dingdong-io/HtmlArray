@@ -1,0 +1,8 @@
+/*版权*/
+.parts-copyright{background-color: #f4f4f4;padding-top: 5.4%;text-align: center;}
+.parts-copyright ul{width: 100%;text-align: center;}
+.parts-copyright li{display: inline-block;width:28.6%;box-sizing: border-box;border-left:1px solid #c6c6c6;text-align: center;}
+.parts-copyright li:first-child{border-left:none;}
+.parts-copyright li a{color:#464646;}
+.parts-copyright .logo-foot{display: inline-block;margin:4.2% auto 5.6%;height:1.5rem;}
+
